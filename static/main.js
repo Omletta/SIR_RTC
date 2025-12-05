@@ -14,6 +14,15 @@ const useTrickleIce = true;
 const initialHash = window.location.hash.substr(1);
 const isSender = initialHash.length === 0;
 
+// Layout modes: sender vs receiver
+if (document.body) {
+    if (isSender) {
+        document.body.classList.add('sender-mode');
+    } else {
+        document.body.classList.add('receiver-mode');
+    }
+}
+
 // Placeholder stream for screen sharing only mode.
 let screenShare;
 let placeholderTrack;
@@ -39,7 +48,8 @@ function ensurePlaceholderTrack() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#666';
         ctx.font = '24px sans-serif';
-        ctx.fillText('Waiting for screen share…', 40, canvas.height / 2);
+        // Plain ASCII text to avoid any odd glyphs (no accents, no special symbols)
+        ctx.fillText('Waiting for screen share', 40, canvas.height / 2);
         const stream = canvas.captureStream(1);
         placeholderTrack = stream.getVideoTracks()[0];
     }
@@ -354,12 +364,18 @@ function createPeerConnection(id) {
     });
     pc.addEventListener('track', (e) => {
         const remoteVideo = document.getElementById('remoteVideo');
+        if (!remoteVideo) {
+            console.warn('remoteVideo element not found');
+            return;
+        }
         remoteVideo.onloadedmetadata = () => {
             // called when the first frame is rendered.
             console.log(id, 'loaded metadata');
         };
         remoteVideo.srcObject = e.streams[0];
-        connectionState.style.display = 'block';
+        if (connectionState) {
+            connectionState.style.display = 'block';
+        }
         // Log remote metadata. Currently assumed to be a {streamid => metadata} object.
         if (remoteMetadata.has(id)) {
             console.log('metadata', e.streams[0].id, remoteMetadata.get(id)[e.streams[0].id]);
@@ -451,8 +467,10 @@ async function queryBitrateStats(pc, lastResult) {
             (now - lastResult.get(report.id).timestamp));
           console.log(`Bitrate ${bitrate}kbps, overhead ${headerrate}kbps, ${packetrate} packets/second`);
 
-          // We use the title attribute as a built-in tooltip.
-          connectionState.title = `Bitrate ${bitrate}kbps, overhead ${headerrate}kbps, ${packetrate} packets/second`;
+          // We use the title attribute as a built-in tooltip (if the element exists).
+          if (connectionState) {
+              connectionState.title = `Bitrate ${bitrate}kbps, overhead ${headerrate}kbps, ${packetrate} packets/second`;
+          }
         }
       }
     });
