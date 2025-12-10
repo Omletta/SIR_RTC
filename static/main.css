@@ -107,3 +107,7 @@ body {
     background: radial-gradient(circle at top, #34495e 0, #1b2838 45%, #000 100%);
     color: #222;
 }
+
+.bandwidth-row {
+    display: none;
+}
