@@ -1,3 +1,4 @@
+//eslint configuration file 
 {
     "env": {
         "node": true,
