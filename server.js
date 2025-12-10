@@ -190,7 +190,7 @@ const wss = new WebSocket.Server({server});
 // Generate a (unique) client id.
 // Exercise: extend this to generate a human-readable id.
 function generateClientId() {
-    // TODO: enforce uniqueness here instead of below.
+   
     return uuid.v4();
 }
  
@@ -252,8 +252,6 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         console.log(id, 'received', message);
         let data;
-        // TODO: your protocol should send some kind of error back to the caller instead of
-        // returning silently below.
         try  {
             data = JSON.parse(message);
         } catch (err) {
@@ -265,21 +263,14 @@ wss.on('connection', (ws) => {
             return;
         }
 
-        // The direct lookup of the other clients websocket is overly simplified.
-        // In the real world you might be running in a cluster and would need to send
-        // messages between different servers in the cluster to reach the other side.
         if (!connections.has(data.id)) {
             console.log(id, 'peer not found', data.id);
-            // TODO: the protocol needs some error handling here. This can be as
-            // simple as sending a 'bye' with an extra error element saying 'not-found'.
+         
             return;
         }
         const peerId = data.id;
         const peer = connections.get(peerId);
 
-        // Stamp messages with our id. In the client-to-server direction, 'id' is the
-        // client that the message is sent to. In the server-to-client direction, it is
-        // the client that the message originates from.
         data.id = id;
         peer.sendMessage(data);
 
