@@ -12,7 +12,7 @@ const localMetadata = {};
 // making call setup faster.
 const useTrickleIce = true;
 const initialHash = window.location.hash.substr(1);
-const isSender = initialHash.length === 0;
+const isSender = initialHash.length > 0;
 
 // Layout modes: sender vs receiver
 if (document.body) {
@@ -389,6 +389,14 @@ function createPeerConnection(id) {
         if (pc.connectionState === 'connected') {
             hangupBtn.disabled = false;
             pc.getStats().then(onConnectionStats);
+            // Make sure the currently active screen-share track (if any)
+            // is used as the outbound video track for all peers.
+            if (screenShare) {
+                const track = screenShare.getVideoTracks()[0];
+                if (track) {
+                    replaceVideoTrack(track).catch(e => console.error('Failed to sync screenShare track after connect', e));
+                }
+            }
         }
     });
     pc.addEventListener('signalingstatechange', () => {
