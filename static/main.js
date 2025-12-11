@@ -368,11 +368,23 @@ function createPeerConnection(id) {
             console.warn('remoteVideo element not found');
             return;
         }
+        const remoteStream = e.streams[0];
+        console.log(id, 'received remote track(s)', remoteStream.getTracks().map(t => ({
+            kind: t.kind,
+            readyState: t.readyState
+        })));
         remoteVideo.onloadedmetadata = () => {
             // called when the first frame is rendered.
-            console.log(id, 'loaded metadata');
+            console.log(id, 'remoteVideo loaded metadata');
         };
-        remoteVideo.srcObject = e.streams[0];
+        // Force remote video to autoplay reliably (muted satisfies autoplay policies).
+        remoteVideo.muted = true;
+        remoteVideo.srcObject = remoteStream;
+        if (typeof remoteVideo.play === 'function') {
+            remoteVideo.play().catch(err => {
+                console.warn('remoteVideo.play() failed', err);
+            });
+        }
         if (connectionState) {
             connectionState.style.display = 'block';
         }
